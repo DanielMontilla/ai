@@ -2,7 +2,7 @@
 name: authoring-skills
 description: Guides the creation, formatting, and refinement of Skills. Use when the user wants to write a new Skill, convert documentation into a Skill, or audit an existing Skill.
 author: Daniel Montilla
-version: 1.1.0
+version: 1.1.1
 license: MIT
 dependencies:
   - executing-skills
@@ -213,7 +213,7 @@ The `groups` field in frontmatter categorizes skills for discovery. Each skill s
 
 | Group | Purpose | Example Skills |
 |---|---|---|
-| `planning` | Design-phase activities: scoping, spec writing, plan review | creating-feature-spec, scoping-features, grill-me |
+| `planning` | Design-phase activities: scoping, spec writing, plan review | creating-feature-spec, scoping-features, grilling |
 | `scaffolding` | Code generation and project/package/module setup | setup-typescript-package, creating-typescript-modules |
 | `refactoring` | Code improvement, restructuring, and cleanup | applying-solid, detecting-duplication, simplifying-code |
 | `documentation` | Doc/rule/schema authoring | writting-jsdoc, authoring-rules |

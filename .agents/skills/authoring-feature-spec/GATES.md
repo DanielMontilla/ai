@@ -2,7 +2,7 @@
 
 - [ ] Workspace type determined
 - [ ] Feature name provided (kebab-case)
-- [ ] Requirements captured and gaps resolved using `grill-me`
+- [ ] Requirements captured and gaps resolved using `grilling`
 - [ ] Execution context handled (worktree created if desired, or in-place confirmed)
 
 ## Phase 1: Structure Validation

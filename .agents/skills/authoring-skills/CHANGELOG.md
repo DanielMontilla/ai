@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2026-07-09
+
+### Fixed
+
+- Updated `grill-me` table entry to `grilling` after skill rename
+
 ## [1.1.0] - 2026-07-09
 
 ### Added

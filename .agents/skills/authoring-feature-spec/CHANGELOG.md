@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] - 2026-07-09
+
+### Fixed
+
+- Updated `grill-me` dependency and link references to `grilling` after skill rename
+
 ## [1.3.0] - 2026-07-08
 
 ### Added
@@ -38,7 +44,7 @@
 
 - Initial release as `authoring-feature-spec` (renamed from `creating-feature-spec`)
 - Git worktree integration in pipeline
-- `grill-me` for requirements gathering
+- `grilling` for requirements gathering
 - Phase-based execution model (Phase A, Phase B, Phase C)
 - Task typing system via frontmatter
 - Flat defect architecture

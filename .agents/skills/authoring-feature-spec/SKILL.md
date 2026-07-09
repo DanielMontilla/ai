@@ -2,11 +2,11 @@
 name: authoring-feature-spec
 description: Authors a phased feature specification with typed tasks, validation gates, and workspace detection. Use when user wants to spec a new feature or rewrite an existing plan.
 author: Daniel Montilla
-version: 1.3.0
+version: 1.3.1
 license: MIT
 dependencies:
   - caveman-compression
-  - grill-me
+  - grilling
   - using-git-worktrees
   - finding-vendors
   - executing-skills
@@ -47,7 +47,7 @@ For each mandatory field:
 
 Do NOT proceed until all mandatory fields are filled. Offer recommendations whenever possible.
 
-**CRITICAL**: Load the [grill-me](../grill-me/SKILL.md) skill to deeply question the user. Resolve all ambiguities before moving to step 2.
+**CRITICAL**: Load the [grilling](../grilling/SKILL.md) skill to deeply question the user. Resolve all ambiguities before moving to step 2.
 
 ### Create Feature Worktree (worktree only)
 

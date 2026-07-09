@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2] - 2026-07-09
+
+### Fixed
+
+- Updated `grill-me` dependency reference to `grilling` after skill rename
+
 ## [1.0.1] - 2026-07-09
 
 ### Added
