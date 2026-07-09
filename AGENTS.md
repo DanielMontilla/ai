@@ -1,31 +1,29 @@
 | Skill | Description |
 |-------|-------------|
-| [adding-vendor](.agents/skills/adding-vendor/SKILL.md) | Adds and manages third-party vendor code as git submodules |
-| [applying-solid](.agents/skills/applying-solid/SKILL.md) | Reviews object-oriented code against all 5 SOLID principles |
-| [authoring-rules](.agents/skills/authoring-rules/SKILL.md) | Creates and maintains agent rules and system prompts |
-| [authoring-skills](.agents/skills/authoring-skills/SKILL.md) | Guides the creation, formatting, and refinement of Skills |
-| [caveman-compression](.agents/skills/caveman-compression/SKILL.md) | Aggressively removes stop words and grammatical scaffolding while preserving meaning |
-| [creating-effect-services](.agents/skills/creating-effect-services/SKILL.md) | Scaffolds Effect v4 services with ServiceMap.Service pattern |
-| [creating-feature-spec](.agents/skills/creating-feature-spec/SKILL.md) | Creates feature specification with task breakdown, grouping, and gate support |
-| [creating-typescript-modules](.agents/skills/creating-typescript-modules/SKILL.md) | Creates tree-shakable TypeScript modules with namespace-style exports |
-| [creating-typescript-structs](.agents/skills/creating-typescript-structs/SKILL.md) | Creates branded struct modules with validation, blueprint, and brand utilities |
-| [detecting-duplication](.agents/skills/detecting-duplication/SKILL.md) | Scans for and refactors duplicated code, logic, and configuration |
-| [executing-feature-spec](.agents/skills/executing-feature-spec/SKILL.md) | Executes feature spec tasks single or multi-agent mode |
-| [executing-skills](.agents/skills/executing-skills/SKILL.md) | Loads, executes, and verifies skills from .agents/skills/ |
-| [favoring-composition](.agents/skills/favoring-composition/SKILL.md) | Identifies deep inheritance trees and replaces them with composition-based designs |
-| [finding-skills](.agents/skills/finding-skills/SKILL.md) | Discovers and surfaces available skills matching user requests |
-| [finding-vendors](.agents/skills/finding-vendors/SKILL.md) | Finds, explores, and reports on third-party vendor source code |
-| [grill-me](.agents/skills/grill-me/SKILL.md) | Interview the user relentlessly about a plan or design until reaching shared understanding |
-| [leaving-it-cleaner](.agents/skills/leaving-it-cleaner/SKILL.md) | Prompts incremental code hygiene improvements whenever touching a file |
-| [managing-feature-spec-defects](.agents/skills/managing-feature-spec-defects/SKILL.md) | Scans codebase for DEFECT: comments and maps them to feature spec tasks |
-| [modifying-skills](.agents/skills/modifying-skills/SKILL.md) | Modifies, updates, extends, or audits existing skills in .agents/skills/ |
-| [planning-git-commits](.agents/skills/planning-git-commits/SKILL.md) | Creates a commit plan with conventional commits based on file paths |
-| [scoping-features](.agents/skills/scoping-features/SKILL.md) | Guides feature scoping to current requirements only, flags speculative architecture |
-| [setup-typescript-package](.agents/skills/setup-typescript-package/SKILL.md) | Scaffolds TypeScript monorepo packages with consistent tooling and bundling |
-| [setup-typescript-tests-with-effect](.agents/skills/setup-typescript-tests-with-effect/SKILL.md) | Sets up Vitest + @effect/vitest testing in an Effect v4 monorepo package |
-| [simplifying-code](.agents/skills/simplifying-code/SKILL.md) | Audits code for over-engineering, unnecessary abstraction, and complexity |
-| [typescript-conventions](.agents/skills/typescript-conventions/SKILL.md) | Index of TypeScript-specific skills in this project |
-| [typescript-prefer-inference](.agents/skills/typescript-prefer-inference/SKILL.md) | Prefers TypeScript inference over explicit type annotations on variable declarations |
-| [unit-testing](.agents/skills/unit-testing/SKILL.md) | Reviews tests for quality and structure, probes whether tests test real behavior |
-| [using-git-worktrees](.agents/skills/using-git-worktrees/SKILL.md) | Ensures isolated workspace exists via native tools or git worktree fallback |
-| [writting-jsdoc](.agents/skills/writting-jsdoc/SKILL.md) | Generates concise JSDoc annotations for TypeScript functions, methods, interfaces, and classes |
+| [adding-vendor](.agents/skills/adding-vendor/SKILL.md) | Adds and manages third-party vendor code as git submodules. Use when the user wants to add vendor source code for local reading or analysis. |
+| [applying-solid](.agents/skills/applying-solid/SKILL.md) | Reviews object-oriented code against all 5 SOLID principles, detecting violations and suggesting corrections. Use when designing new classes/modules or refactoring existing ones. |
+| [authoring-feature-spec](.agents/skills/authoring-feature-spec/SKILL.md) | Authors a phased feature specification with typed tasks, validation gates, and workspace detection. Use when user wants to spec a new feature or rewrite an existing plan. |
+| [authoring-rules](.agents/skills/authoring-rules/SKILL.md) | Creates and maintains agent rules and system prompts. Use when the user wants to create, improve, or audit agent rules, system prompts, or context files. |
+| [authoring-skills](.agents/skills/authoring-skills/SKILL.md) | Guides the creation, formatting, and refinement of Skills. Use when the user wants to write a new Skill, convert documentation into a Skill, or audit an existing Skill. |
+| [caveman-compression](.agents/skills/caveman-compression/SKILL.md) | Aggressively removes stop words and grammatical scaffolding while preserving meaning. Use when user asks to compress, shorten, simplify, or caveman-style reduce text. |
+| [creating-effect-services](.agents/skills/creating-effect-services/SKILL.md) | Scaffolds Effect v4 services with ServiceMap.Service pattern. Use when creating a new service in packages/*/src/services/. |
+| [creating-typescript-modules](.agents/skills/creating-typescript-modules/SKILL.md) | Creates tree-shakable TypeScript modules with namespace-style exports. Use when the user wants to scaffold a new reusable module package. |
+| [creating-typescript-structs](.agents/skills/creating-typescript-structs/SKILL.md) | Creates branded struct modules with validation, blueprint, and brand utilities in the structs folder. Use when creating a new branded type in packages/*/src/structs/. |
+| [detecting-duplication](.agents/skills/detecting-duplication/SKILL.md) | Scans for and refactors duplicated code, logic, and configuration. Use when reviewing PRs, cleaning tech debt, or before adding features. |
+| [executing-feature-spec](.agents/skills/executing-feature-spec/SKILL.md) | Executes feature spec tasks — orchestrates by type (exploratory, execution, planning, interruptor, defect) with human-in-the-loop phase interruptions and flat defect resolution. Reads feature state to determine active phase and resumes or begins execution accordingly. |
+| [executing-skills](.agents/skills/executing-skills/SKILL.md) | Loads, executes, and verifies skills from .agents/skills/. Use when the user's request matches an existing skill's description or when instructed to use a specific skill. |
+| [favoring-composition](.agents/skills/favoring-composition/SKILL.md) | Identifies deep inheritance trees and replaces them with composition-based designs. Use when designing object relationships or refactoring brittle class hierarchies. |
+| [finding-skills](.agents/skills/finding-skills/SKILL.md) | Discovers and surfaces available skills matching user requests. Use when the user asks "what skills do you have", "how do I do X", or wants to find a skill for a specific task. |
+| [finding-vendors](.agents/skills/finding-vendors/SKILL.md) | Finds, explores, and reports on third-party vendor source code vendored as git submodules. Use when the user wants to examine vendor code, find a specific vendor package, or understand available vendor dependencies. |
+| [grilling](.agents/skills/grilling/SKILL.md) | Grill the user relentlessly about a plan or design. Use when the user wants to stress-test a plan before building, or uses any 'grill' trigger phrases. |
+| [leaving-it-cleaner](.agents/skills/leaving-it-cleaner/SKILL.md) | Prompts incremental code hygiene improvements whenever touching a file. Use during any edit, bugfix, or feature work — leave the campground cleaner than before. |
+| [modifying-skills](.agents/skills/modifying-skills/SKILL.md) | Modifies, updates, extends, or audits existing skills in .agents/skills/. Use when the user wants to edit an existing skill, add content to a skill, audit a skill for quality, or update skill metadata. |
+| [planning-git-commits](.agents/skills/planning-git-commits/SKILL.md) | Creates a commit plan with conventional commits based on file paths. Use when the user wants to push or commit changes to git. |
+| [setup-typescript-package](.agents/skills/setup-typescript-package/SKILL.md) | Scaffolds TypeScript monorepo packages and services with consistent tooling, tsdown bundling, linting, formatting, and typechecking. Use when setting up a new package or service in a monorepo. |
+| [setup-typescript-tests-with-effect](.agents/skills/setup-typescript-tests-with-effect/SKILL.md) | Scaffolds Vitest + @effect/vitest testing infrastructure in an Effect v4 monorepo package. Use when setting up a new Effect v4 package that needs tests or adding test support to an existing one. |
+| [simplifying-code](.agents/skills/simplifying-code/SKILL.md) | Audits code for over-engineering, unnecessary abstraction, and complexity. Suggests simpler alternatives. Use when a solution feels bloated or during code review. |
+| [typescript-conventions](.agents/skills/typescript-conventions/SKILL.md) | Index of TypeScript-specific skills in this project — lists short descriptions and paths. Use when deciding which TypeScript skill applies, or as a reference map of available TS tooling. |
+| [typescript-prefer-inference](.agents/skills/typescript-prefer-inference/SKILL.md) | Prefers TypeScript inference over explicit type annotations on variable declarations. Use when reviewing TypeScript code that overuses `: SomeType` annotations or `as` casts. |
+| [unit-testing](.agents/skills/unit-testing/SKILL.md) | Reviews tests for quality and structure. Probes whether tests test real behavior or just mocks. Verifies test directory layout. Use when writing tests, reviewing PRs with test changes, or before adding test coverage. |
+| [using-git-worktrees](.agents/skills/using-git-worktrees/SKILL.md) | Use starting feature work needs isolation from current workspace or before executing implementation plans - ensures isolated workspace exists via native tools or git worktree fallback |
+| [writting-jsdoc](.agents/skills/writting-jsdoc/SKILL.md) | Generates concise JSDoc annotations for TypeScript functions, methods, interfaces, and classes. Use when the user asks to add, improve, or generate JSDoc documentation for TypeScript code. |
