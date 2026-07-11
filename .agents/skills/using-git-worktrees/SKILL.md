@@ -1,7 +1,7 @@
 ---
 name: using-git-worktrees
 description: Use starting feature work needs isolation from current workspace or before executing implementation plans - ensures isolated workspace exists via native tools or git worktree fallback
-version: 1.0.0
+version: 1.1.0
 dependencies:
   - executing-skills
 groups:
@@ -42,7 +42,11 @@ BRANCH=$(git branch --show-current)
 git rev-parse --show-superproject-working-tree 2>/dev/null
 ```
 
-**If `GIT_DIR != GIT_COMMON` (and not submodule):** Already in linked worktree. Skip to Step 2. Do NOT create another worktree.
+**If `GIT_DIR != GIT_COMMON` (and not submodule):** Already in linked worktree.
+
+**Exception**: If the calling skill (e.g., `authoring-feature-spec-in-worktree`) explicitly instructs creating a new feature branch worktree, follow that instruction — the "skip" rule is overridden. The calling skill will handle worktree creation and relocation.
+
+**Otherwise**: Skip to Step 2. Do NOT create another worktree.
 
 Report branch state:
 - On branch: "Already in isolated workspace at `<path>` on branch `<name>`."
@@ -126,21 +130,21 @@ cd "$path"
 
 ## Step 2: Project Setup
 
-Auto-detect and run appropriate setup:
+Initialize the worktree environment. If the agent does not already know the correct setup procedure, ask the user with a recommended option "let agent figure it out." If that option is chosen, explore project conventions (AGENTS.md, README.md, package.json, scripts/) to determine the correct setup command. Do not hardcode to any specific tool or package manager.
 
+Typical patterns (may vary):
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
+# Node.js / Bun
+bun install / npm install / pnpm install
 
 # Rust
-if [ -f Cargo.toml ]; then cargo build; fi
+cargo build
 
 # Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+pip install -r requirements.txt / poetry install
 
 # Go
-if [ -f go.mod ]; then go mod download; fi
+go mod download
 ```
 
 ## Step 3: Verify Clean Baseline
@@ -168,7 +172,7 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| Already in linked worktree | Skip creation (Step 0) |
+| Already in linked worktree | Skip creation (Step 0) unless calling skill overrides |
 | In submodule | Treat as normal repo (Step 0 guard) |
 | Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
@@ -211,7 +215,7 @@ Ready to implement <feature-name>
 ## Red Flags
 
 **Never:**
-- Create worktree when Step 0 detects existing isolation
+- Create worktree when Step 0 detects existing isolation (exception: calling skill explicitly instructs new worktree creation)
 - Use `git worktree add` when native worktree tool available (e.g., `EnterWorktree`). This is #1 mistake — use native tool if available.
 - Skip Step 1a by jumping straight to Step 1b git commands
 - Create worktree without verifying it is ignored (project-local)
