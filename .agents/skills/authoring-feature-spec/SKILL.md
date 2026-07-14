@@ -2,7 +2,7 @@
 name: authoring-feature-spec
 description: Authors a phased feature specification with typed tasks and validation gates. Use when user wants to spec a new feature or rewrite an existing plan in the current workspace.
 author: Daniel Montilla
-version: 3.0.1
+version: 3.2.0
 license: MIT
 dependencies:
   - caveman-compression
@@ -66,12 +66,23 @@ Assign a specific `type` to every task. The type dictates how the executor agent
 - `planning`: Ingests context from exploratory tasks (via MEMORY.md) and plans next steps. Can spawn tasks, update plans, or ask questions.
 - `interruptor`: Critical decision point. Halts and asks the user for a required decision before proceeding.
 - `defect`: Fixes bugs from phase reviews. Appended at execution time by defect management — not authored upfront. Treated like execution, focused on `related-tasks`.
+- `review`: Runs an adversarial review of a completed phase. **Highly recommended** to delegate this to an independent subagent (separate from the main working agent) so the review is unbiased and free of author blind spots. The subagent executes the [adversarial-review](../adversarial-review/SKILL.md) skill and writes its findings to `REVIEW.md` in the task directory. After the human reviews `REVIEW.md`, a new set of remediation tasks (typically `defect` / `execution`) is authored for that phase to close the issues. The `review` task blocks phase completion until the human has reviewed `REVIEW.md` and accepted or dismissed each finding.
 
 All tasks manage their own progress in a `MEMORY.md` file — track context, decisions, completion criteria, and handoff info for subsequent phases.
 
 Naming format:
 - Feature dir: `.agents/features/<kebab-name>/`
 - Task dir: `<PHASE_LETTER><NN>-<kebab-task-name>/` (e.g., `A01-explore-auth`, `B01-implement-login`)
+
+### Phase-end review tasks
+
+**Highly recommended**: end every Phase with a `review` task (e.g., `A99-review-phase`, `B99-review-phase`). This task delegates to an independent subagent that runs the [adversarial-review](../adversarial-review/SKILL.md) skill over the just-completed phase and records findings in the task's `REVIEW.md`. The phase must not be marked complete, and the next phase must not start, until:
+
+1. The independent subagent has written `REVIEW.md`.
+2. The human has reviewed `REVIEW.md` and accepted or dismissed each finding.
+3. A remediation task set (`defect` / `execution`) has been authored for the accepted findings, and those tasks are either complete or tracked as pending work for the next phase.
+
+Keep the `review` task's subagent **independent from the main working agent** — it must not be the agent that authored or executed the phase under review, to avoid author blind spots.
 
 ## 3. Design Gates
 
@@ -87,6 +98,7 @@ Create `.agents/features/<feature-name>/` and subdirectories.
 Generate files from templates:
 - `FEATURE.md` — feature metadata, description, requirements, task table
 - `TASK.md` + `MEMORY.md` per task directory
+- `REVIEW.md` for each `review` task (see [templates/REVIEW.md](templates/REVIEW.md)) — populated by the independent subagent after the phase completes
 - `GATES.md` when a task requires validation gates (see [templates/GATES.md](templates/GATES.md))
 
 When generating `TASK.md`, prune the `Completion` checklist to include only the items relevant to the assigned task `type`.
@@ -114,15 +126,32 @@ Show the user the generated directory tree, phase breakdown, task types, and gat
 |---|---|---|---|
 | `id` | `<LETTER><NN>` e.g. `A01`, `B02` | Phase letter + zero-padded number |
 | `name` | `<kebab-case>` | Short task name matching directory |
-| `type` | `exploratory` / `execution` / `planning` / `interruptor` / `defect` | Determines executor behavior |
+| `type` | `exploratory` / `execution` / `planning` / `interruptor` / `defect` / `review` | Determines executor behavior |
 | `originator` | `user` / `defect` / `defect:<id>` / `planner:<id>` | Who created this task |
 | `depends-on` | `<task-ids>` | Comma-separated task IDs this blocks on |
 | `related-tasks` | `<task-ids>` | Comma-separated task IDs this fixes (only for `defect` type) |
-| `status` | `pending` / `in-progress` / `complete` | Current task state |
+| `status` | `pending` / `in-progress` / `complete` / `blocked` | Current task state (see Status enum below) |
+
+## Status Enum (canonical — single source of truth)
+
+All feature-spec skills (`authoring-feature-spec`, `executing-feature-spec`) MUST use exactly this status vocabulary. No skill may invent additional values:
+
+| Status | Meaning |
+|---|---|
+| `pending` | Not yet started |
+| `in-progress` | Currently being worked |
+| `complete` | All completion criteria met |
+| `blocked` | Cannot proceed — awaiting an external decision, dependency, or unresolved defect sub-tasks. A parent task whose `defect` sub-tasks are open is `blocked`, never `defect`. |
+
+> **Note**: `defect` is a task **type**, not a status. A task blocked by open defects keeps `type` describing its work and `status: blocked`; the open `type: defect` children explain why. Do not set `status: defect` anywhere.
 
 ## MEMORY.md
 
 No frontmatter. Free-form sections: Context, Progress, Open Questions, Handoff, Deviations.
+
+## REVIEW.md
+
+No frontmatter. Artifact written by a `review` task's independent subagent after running the [adversarial-review](../adversarial-review/SKILL.md) skill. Free-form sections: Scope Reviewed, Findings (severity + `file_path:line` + problem + impact + suggestion), Accepted/Dismissed tally, Remediation Task IDs. Created from [templates/REVIEW.md](templates/REVIEW.md).
 
 ## GATES.md
 

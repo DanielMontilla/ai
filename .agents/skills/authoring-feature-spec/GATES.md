@@ -15,9 +15,10 @@
 ## Phase 2: Content Review
 
 - [ ] Tasks are properly grouped into sequential Phases (Phase A → Phase B)
-- [ ] Every `TASK.md` has a valid `type` defined in frontmatter (`exploratory`, `execution`, `planning`, `interruptor`, `defect`)
+- [ ] Every `TASK.md` has a valid `type` defined in frontmatter (`exploratory`, `execution`, `planning`, `interruptor`, `defect`, `review`)
 - [ ] Inter-phase dependencies are correct (tasks in Phase B depend on Phase A)
 - [ ] Phase interruptions are documented (expecting user validation at the end of each Phase)
+- [ ] Each Phase ends with a `review` task run by an independent subagent, with findings in `REVIEW.md` and a human sign-off gate
 - [ ] `GATES.md` correctly placed for tasks that require validation (not restricted to execution tasks)
 
 ## Phase 3: Review

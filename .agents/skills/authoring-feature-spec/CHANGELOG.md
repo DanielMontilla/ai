@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.2.0] - 2026-07-14
+
+### Added
+
+- Canonical status enum (`pending | in-progress | complete | blocked`) defined as the single source of truth for task status across feature-spec skills; `defect` is a task `type`, never a status
+
+### Changed
+
+- Status Enum note no longer references the deleted `managing-feature-spec-defects` skill
+
+## [3.1.0] - 2026-07-14
+
+### Added
+
+- New `review` task type: runs an adversarial review of a completed phase, delegating to an independent subagent (not the main working agent) executing the `adversarial-review` skill
+- `REVIEW.md` artifact template for `review` tasks — records severity-ranked findings (`file_path:line` + problem + impact + suggestion) and the human review / remediation-task handoff
+- Phase-end review convention: every Phase should end with a `review` task that blocks phase completion until the human has reviewed `REVIEW.md` and a remediation task set (`defect` / `execution`) is authored for accepted findings
+- `REVIEW.md` to the Frontmatter Reference and the file-generation step
+
 ## [3.0.1] - 2026-07-14
 
 ### Changed

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0] - 2026-07-14
+
+### Added
+
+- `review` task type: executed by an independent subagent running the `adversarial-review` skill over the completed phase, writing findings to `REVIEW.md`
+- Independent-subagent review step in the mermaid pipeline (review task runs after non-review tasks, before phase lock)
+- End-of-Phase Review flow: human reviews `REVIEW.md`, accepted findings become `defect`/`execution` remediation tasks, then loop
+- `review` added to the task-type behavior table and frontmatter description
+
 ## [1.2.2] - 2026-07-14
 
 ### Changed
