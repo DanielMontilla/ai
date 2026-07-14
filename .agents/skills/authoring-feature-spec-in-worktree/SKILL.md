@@ -2,7 +2,7 @@
 name: authoring-feature-spec-in-worktree
 description: Authors a phased feature specification with workspace isolation via git worktrees. Wraps authoring-feature-spec with worktree creation, initialization, and relocation. Use when user wants to spec a new feature with an isolated git worktree.
 author: Daniel Montilla
-version: 1.0.1
+version: 1.0.2
 license: MIT
 dependencies:
   - authoring-feature-spec
@@ -34,45 +34,26 @@ The worktree and branch names depend on the feature name. If the feature name is
 1. Ask the user: "What is the feature name (kebab-case)?"
 2. Use their answer as `<feature-name>` throughout this pipeline.
 
-### Determine workspace type
+### Create isolation — delegate to `using-git-worktrees`
 
-Reference `using-git-worktrees` to detect isolation:
+**Do NOT reimplement worktree logic.** Do NOT run `git worktree add` directly, and do NOT invent your own path/branch rules. All isolation logic — Step 0 detection (submodule guard, linked-worktree detection), native-tool preference, `.gitignore`/ignore verification, worktree creation, and relocation — lives in [using-git-worktrees](../using-git-worktrees/SKILL.md). Delegate to it.
 
-- **worktree**: In an isolated git linked worktree (GIT_DIR != GIT_COMMON, not a submodule). A new feature-specific worktree will be created from the current branch.
-- **in-place**: In the main repository checkout (GIT_DIR == GIT_COMMON).
+1. Load `using-git-worktrees`.
+2. It runs **Step 0 detection first**:
+   - **Already in a linked worktree** (feature or non-feature, `GIT_DIR != GIT_COMMON`, not a submodule): do **NOT** create a nested worktree — that is forbidden and breaks harness tracking. Author **in place** in the current (already isolated) worktree. Set `workspace-type: worktree` and proceed to step 2. No relocation needed.
+   - **In the main checkout** (`GIT_DIR == GIT_COMMON`) or **in a submodule**: proceed to create isolation.
+3. To create the feature worktree, invoke `using-git-worktrees` Step 1 and **supply the branch name `feat/<feature-name>`** — pass `feat/<feature-name>` as the branch argument (the `$1` for its git fallback), or request the native tool to name the branch `feat/<feature-name>`. This keeps the branch convention consistent with `authoring-feature-spec` step 0, which recognizes a feature worktree by a `feat/` branch prefix — so an already-isolated worktree is never misclassified (fixes the `feat/<name>` vs `*-worktree` conflict).
+4. Follow `using-git-worktrees` for project setup (Step 2) and clean-baseline verification (Step 3).
 
-If `in-place`, recommend isolating — ask if they want a worktree. If they accept, create one (using-git-worktrees). If they decline, stay `in-place` (the spec will be authored without isolation; continue to step 2).
+### Relocate
 
-### Create feature worktree
+If `using-git-worktrees` created a new worktree, relocate into it (`cd "<path>"` or set tool workdir) **before** any context gathering or grilling — the worktree is the spec's home. All spec files will be created at `.agents/features/<feature-name>/` within it.
 
-**Must happen before any context gathering or grilling.** The worktree is the spec's home — all subsequent work lives there.
-
-If workspace type is `worktree`, create a new feature-specific worktree:
-
-1. Note current branch: `$(git branch --show-current)`
-2. Generate branch name: `feat/<feature-name>`
-3. Determine worktree path:
-   - If inside a linked worktree (GIT_DIR != GIT_COMMON), compute path relative to the bare repo parent: `$(dirname $(git rev-parse --git-common-dir))/<feature-name>`
-   - If `in-place`, compute relative to repo root: `../<feature-name>`
-4. Create worktree: `git worktree add "<path>" -b "feat/<feature-name>"`
-5. Relocate to worktree: `cd "<path>"` or set tool workdir to the new path
-
-### Initialize worktree
-
-After relocating, initialize the new worktree environment. If the agent does not already know the correct setup procedure:
-
-1. Ask the user: "How should I initialize the worktree (install deps, build, etc.)?"
-2. Provide a recommended option: "Let agent figure it out" (agent explores AGENTS.md, README.md, package.json, scripts/ to auto-detect)
-3. If user selects the recommendation, explore project conventions to determine setup commands. Do not hardcode to any specific tool.
-4. Execute setup and verify it succeeded before proceeding.
-
-### All subsequent steps execute inside this worktree.
-
-The spec files will be created at `.agents/features/<feature-name>/` within it.
+If authoring in place (already-isolated case above), skip relocation.
 
 ## 2. Author Spec
 
-From this point, follow the [authoring-feature-spec](../authoring-feature-spec/SKILL.md) pipeline (skip its step 0 — you are already in the feature worktree):
+From this point, follow the [authoring-feature-spec](../authoring-feature-spec/SKILL.md) pipeline (skip its step 0 — isolation is already handled by `using-git-worktrees` above):
 
 1. Gather Context — collect requirements, load grilling skill
 2. Design Phases & Task Types

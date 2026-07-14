@@ -1,7 +1,7 @@
 ---
 name: using-git-worktrees
 description: Use starting feature work needs isolation from current workspace or before executing implementation plans - ensures isolated workspace exists via native tools or git worktree fallback
-version: 1.1.0
+version: 1.1.1
 dependencies:
   - executing-skills
 groups:
@@ -44,7 +44,7 @@ git rev-parse --show-superproject-working-tree 2>/dev/null
 
 **If `GIT_DIR != GIT_COMMON` (and not submodule):** Already in linked worktree.
 
-**Exception**: If the calling skill (e.g., `authoring-feature-spec-in-worktree`) explicitly instructs creating a new feature branch worktree, follow that instruction — the "skip" rule is overridden. The calling skill will handle worktree creation and relocation.
+**Exception (branch/location only — never nesting)**: A calling skill (e.g., `authoring-feature-spec-in-worktree`) may request a specific branch name or worktree location. Honor that request **only when NOT already in a linked worktree**. If you are already in a linked worktree, do NOT create a nested worktree — the calling skill must author in the current (already isolated) workspace instead. The calling skill must delegate creation to this skill (Step 1); it must never run `git worktree add` directly.
 
 **Otherwise**: Skip to Step 2. Do NOT create another worktree.
 
@@ -172,7 +172,7 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
-| Already in linked worktree | Skip creation (Step 0) unless calling skill overrides |
+| Already in linked worktree | Skip creation (Step 0) — never nest inside an existing worktree; calling skill may only request branch/location |
 | In submodule | Treat as normal repo (Step 0 guard) |
 | Native worktree tool available | Use it (Step 1a) |
 | No native tool | Git worktree fallback (Step 1b) |
@@ -215,7 +215,7 @@ Ready to implement <feature-name>
 ## Red Flags
 
 **Never:**
-- Create worktree when Step 0 detects existing isolation (exception: calling skill explicitly instructs new worktree creation)
+- Create a nested worktree inside an existing linked worktree (Step 0 detects isolation — skip creation; calling skill may only request branch/location, never a new nested worktree)
 - Use `git worktree add` when native worktree tool available (e.g., `EnterWorktree`). This is #1 mistake — use native tool if available.
 - Skip Step 1a by jumping straight to Step 1b git commands
 - Create worktree without verifying it is ignored (project-local)

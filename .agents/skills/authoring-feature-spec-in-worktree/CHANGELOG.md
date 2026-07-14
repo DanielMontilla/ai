@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2] - 2026-07-14
+
+### Changed
+
+- `Create feature worktree` step rewritten to delegate all isolation to `using-git-worktrees` instead of running `git worktree add` directly; passes branch `feat/<feature-name>` to keep `authoring-feature-spec` step 0 feature-worktree recognition consistent
+
+### Fixed
+
+- No longer spawns a nested worktree when already inside a linked worktree; authors in place instead
+
 ## [1.0.1] - 2026-07-14
 
 ### Changed

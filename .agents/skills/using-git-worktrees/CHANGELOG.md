@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1] - 2026-07-14
+
+### Changed
+
+- Step 0 exception reworded: a calling skill may request a branch name or worktree location, but only when not already in a linked worktree. Nested worktree creation is forbidden; the calling skill must delegate creation to this skill and never run `git worktree add` directly
+- Quick Reference and Red Flags updated to forbid nested worktrees
+
 ## [1.1.0] - 2026-07-11
 
 ### Changed
