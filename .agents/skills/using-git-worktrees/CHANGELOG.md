@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] - 2026-07-14
+
+### Added
+
+- Documented the `feat/<feature-name>` branch convention in the git fallback; default `<branch>-worktree` is not recognized as a feature worktree by authoring-feature-spec (REVIEW.md F9)
+
 ## [1.1.1] - 2026-07-14
 
 ### Changed

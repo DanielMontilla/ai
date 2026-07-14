@@ -1,7 +1,7 @@
 ---
 name: using-git-worktrees
 description: Use starting feature work needs isolation from current workspace or before executing implementation plans - ensures isolated workspace exists via native tools or git worktree fallback
-version: 1.1.1
+version: 1.2.0
 dependencies:
   - executing-skills
 groups:
@@ -120,6 +120,7 @@ fi
 # Determine branch name for new worktree
 # Use current branch as base, append feature suffix or derive from context
 BRANCH_NAME="${1:-$(git branch --show-current)-worktree}"
+  # Default `<branch>-worktree` is NOT recognized as a feature worktree by authoring-feature-spec (which requires a `feat/` prefix). Calling skills that need feature classification MUST pass `feat/<feature-name>` as $1. (See REVIEW.md F9.)
 
 path="$LOCATION/$BRANCH_NAME"
 git worktree add "$path" -b "$BRANCH_NAME"
