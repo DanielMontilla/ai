@@ -22,7 +22,7 @@ Use when asked to compress, shorten, simplify, or caveman-style reduce text whil
 
 Identify text passages that can be compressed — any text where brevity matters more than readability.
 
-> **Warning:** Do NOT apply this skill to structured operational documents — task frontmatter, or MEMORY.md `Handoff`/`Deviations`/`Requirements` sections — where removing prepositions or auxiliary verbs can change meaning. The feature-spec skills apply it only to free-form prose for this reason (see REVIEW.md F3).
+> **Warning:** Do NOT apply this skill to structured operational documents — task frontmatter, or MEMORY.md `Handoff`/`Deviations` sections and TASK.md `Requirements` — where removing prepositions or auxiliary verbs can change meaning. The feature-spec skills apply it only to free-form prose for this reason.
 
 ## 2. Apply Compression Rules
 

@@ -99,7 +99,7 @@ Follow priority order. Explicit user preference always beats observed filesystem
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
-**If NOT ignored:** Add to .gitignore, commit change, then proceed.
+**If NOT ignored:** Add the chosen worktree directory (`.worktrees` if it exists or by default, otherwise `worktrees`, per Directory Selection above) to `.gitignore`, commit the change, then proceed.
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
@@ -120,7 +120,7 @@ fi
 # Determine branch name for new worktree
 # Use current branch as base, append feature suffix or derive from context
 BRANCH_NAME="${1:-$(git branch --show-current)-worktree}"
-  # Default `<branch>-worktree` is NOT recognized as a feature worktree by authoring-feature-spec (which requires a `feat/` prefix). Calling skills that need feature classification MUST pass `feat/<feature-name>` as $1. (See REVIEW.md F9.)
+  # Default `<branch>-worktree` is NOT recognized as a feature worktree by authoring-feature-spec (which requires a `feat/` prefix). Calling skills that need feature classification must set `BRANCH_NAME=feat/<feature-name>` explicitly before Step 1b (a loaded skill receives no `$1` argument)..
 
 path="$LOCATION/$BRANCH_NAME"
 git worktree add "$path" -b "$BRANCH_NAME"
