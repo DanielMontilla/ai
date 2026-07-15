@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0] - 2026-07-15
+
+### Added
+
+- Isolation requirement: the reviewer must operate in a brand new context with no knowledge of the original implementer's thoughts or rationale; Phase 0 gate added to GATES.md
+
 ## [1.0.1] - 2026-07-14
 
 ### Fixed

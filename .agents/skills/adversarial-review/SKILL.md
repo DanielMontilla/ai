@@ -2,7 +2,7 @@
 name: adversarial-review
 description: Performs a hostile, bug-hunting code review that assumes the author made mistakes. Surfaces possible bugs, edge cases, security holes, missed refactors, missing tests, and documentation gaps. Use when reviewing code, PRs, or diffs before merge.
 author: Daniel Montilla
-version: 1.0.1
+version: 1.1.0
 license: MIT
 dependencies:
   - executing-skills
@@ -22,6 +22,15 @@ Use when reviewing code, a pull request, or a diff and the user wants more than 
 # Mindset
 
 Adopt the stance of a hostile reviewer whose job is to find the defect the author missed. Do not assume the code is correct; assume it is subtly broken and prove otherwise. For every claim "this works", ask "when does it not?" Prefer concrete evidence (a code path, an input, a state) over vague concerns.
+
+### Isolation Requirement
+
+You MUST review in a **brand new context** — you may only know about the feature, the changes, and the goals. You must NEVER know about the thoughts, rationale, or context of the agent that originally implemented the code. Specifically:
+
+- You may see: the diff/changed code, the feature specification, requirements/goals, relevant tests, and any public documentation.
+- You must NOT see: the original author's implementation notes, design commentary, commit messages explaining intent, internal discussion threads, or any other artifact that reveals what the author *thought* they were doing.
+
+This prevents anchoring bias and ensures the review judges only what the code *actually does* against what it *should do*, not against what the author intended.
 
 # Pipeline
 
