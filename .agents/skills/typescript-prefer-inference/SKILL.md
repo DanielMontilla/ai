@@ -1,6 +1,6 @@
 ---
 name: typescript-prefer-inference
-description: Prefers TypeScript inference over explicit type annotations on variable declarations. Use when reviewing TypeScript code that overuses `: SomeType` annotations or `as` casts.
+description: "Prefers TypeScript inference over explicit type annotations on variable declarations. Use when reviewing TypeScript code that overuses `: SomeType` annotations or `as` casts."
 author: Daniel Montilla
 version: 1.0.1
 dependencies:
