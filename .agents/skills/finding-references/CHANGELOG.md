@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0] - 2026-07-22
+
+### Changed
+
+- Updated description to reflect plain git clone approach (not submodules)
+- Changed filesystem path from `references/` to `.agents/references/` in registry table and prose
+- Updated migration note to reference new `.agents/references/` path
+
 ## [1.1.0] - 2026-07-14
 
 ### Changed

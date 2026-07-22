@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0] - 2026-07-22
+
+### Changed
+
+- Replaced git submodule workflow with plain git clone
+- Changed filesystem path from `references/` to `.agents/references/`
+- Removed `.gitmodules` validation and submodule-specific commands
+- Updated maintain step from `git submodule update --remote --merge` to `cd && git pull`
+- Simplified read-only guardrails (gitignore-based)
+- Updated migration note referencing new `.agents/references/` path
+
 ## [1.1.0] - 2026-07-14
 
 ### Changed

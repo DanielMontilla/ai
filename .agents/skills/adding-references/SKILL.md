@@ -1,8 +1,8 @@
 ---
 name: adding-references
-description: Adds and manages third-party reference source code as git submodules. Use when the user wants to add reference source code for local reading or analysis.
+description: Adds and manages third-party reference source code as cloned git repositories. Use when the user wants to add reference source code for local reading or analysis.
 author: Daniel Montilla
-version: 1.1.0
+version: 2.0.0
 license: MIT
 dependencies:
   - executing-skills
@@ -13,9 +13,9 @@ groups:
 
 # When To Use
 
-Use when the user asks to add reference source code, pull in third-party code for local reading, or analyze external codebases. Also use when managing existing git submodules for reference code.
+Use when the user asks to add reference source code, pull in third-party code for local reading, or analyze external codebases.
 
-> **Note**: This skill was previously named `adding-vendor` and used `vendor/` as the path. All references now use `references/`. If you see old references to `vendor/` in existing submodules, they should be migrated.
+> **Note**: References live under `.agents/references/` as plain git clones (not submodules). This directory is gitignored. Previously, references were stored under `references/` as git submodules.
 
 > **Prerequisite**: Load the [executing-skills](../executing-skills/SKILL.md) skill before running this pipeline. It governs how skills are loaded, executed, and verified.
 
@@ -25,38 +25,35 @@ Use when the user asks to add reference source code, pull in third-party code fo
 
 1. **Git init**: run `git rev-parse --is-inside-work-tree`. If not a git repo, abort.
 2. **Directory**: ensure at repository root.
-3. **.gitmodules**: if exists, read it. Ensure target reference is not already mapped.
+3. **References directory**: ensure `.agents/references/` exists. Create it if missing:
+   ```bash
+   mkdir -p .agents/references
+   ```
+4. **Gitignore**: ensure `.agents/references` is listed in `.gitignore`. If not, append it:
+   ```bash
+   echo ".agents/references" >> .gitignore
+   ```
 
 ## 2. Install Reference
 
-### Create Submodule
+### Clone Repository
 
 ```bash
-git submodule add <repo-url> references/<reference-name>
+git clone <repo-url> .agents/references/<reference-name>
 ```
-
-### Initialize
-
-```bash
-git submodule update --init --recursive
-```
-
-If repo has sub-dependencies, pass `--recursive`.
 
 ### Verify
 
 ```bash
-ls -R references/<reference-name>
+ls -R .agents/references/<reference-name>
 ```
-
-If directory empty, re-run `git submodule update --init --recursive`.
 
 ### Register Reference
 
 Add the reference to `.agents/skills/finding-references/SKILL.md` table:
 
 ```markdown
-| <reference-name> | references/<reference-name> | <repo-url> |
+| <reference-name> | .agents/references/<reference-name> | <repo-url> |
 ```
 
 ## 3. Maintain Reference
@@ -64,40 +61,29 @@ Add the reference to `.agents/skills/finding-references/SKILL.md` table:
 When user requests "update" or "latest version":
 
 ```bash
-git submodule update --remote --merge
-git add .gitmodules references/<reference-name>
-git commit -m "sys: update reference <reference-name> to latest remote"
+cd .agents/references/<reference-name> && git pull
 ```
 
-## 4. Configure Read-Only Guardrails
+## 4. Read-Only Guardrails
 
-### Option A: Global Ignore (Recommended)
+`.agents/references/` is gitignored, so reference files stay out of commits and PRs automatically.
 
-Append `references/` to root `.gitignore` so reference files stay out of PRs.
-
-### Option B: Ignore Tracking
-
-```bash
-git config submodule.references/<reference-name>.ignore all
-```
-
-Prevents dirty reference folders from appearing in `git status`.
+If a user needs to ensure they don't accidentally modify reference files, remind them these are read-only snapshots for local analysis.
 
 ## 5. Recover from Modified Content
 
-If "Modified Content" inside reference blocks switching or updating:
+If local modifications need to be discarded:
 
 ```bash
-cd references/<reference-name> && git reset --hard HEAD && cd -
+cd .agents/references/<reference-name> && git reset --hard HEAD && cd -
 ```
 
 # Reference
 
 | Action | Command |
 |--------|---------|
-| Add reference | `git submodule add <url> references/<name>` |
-| Initialize | `git submodule update --init --recursive` |
-| Verify | `ls -R references/<name>` |
+| Add reference | `git clone <url> .agents/references/<name>` |
+| Verify | `ls -R .agents/references/<name>` |
 | Register reference | Edit `.agents/skills/finding-references/SKILL.md` |
-| Update to latest | `git submodule update --remote --merge` |
-| Reset reference | `cd references/<name> && git reset --hard HEAD && cd -` |
+| Update to latest | `cd .agents/references/<name> && git pull` |
+| Reset reference | `cd .agents/references/<name> && git reset --hard HEAD && cd -` |
