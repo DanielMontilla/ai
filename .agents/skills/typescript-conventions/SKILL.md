@@ -17,7 +17,7 @@ dependencies:
   - leaving-it-cleaner
   - scoping-features
   - setup-typescript-package
-  - setup-typescript-tests-with-effect
+  - effect-unit-testing
   - simplifying-code
   - typescript-prefer-inference
   - writting-jsdoc
@@ -69,7 +69,9 @@ Load the matched skill with the `skill` tool, then follow its Pipeline section e
 
 | Skill | Description |
 |-------|-------------|
-| [`setup-typescript-tests-with-effect`](../setup-typescript-tests-with-effect/SKILL.md) | Scaffolds Vitest + @effect/vitest testing infrastructure in an Effect v4 monorepo package |
+| [`unit-testing`](../unit-testing/SKILL.md) | Language-agnostic test quality fundamentals |
+| [`typescript-unit-testing`](../typescript-unit-testing/SKILL.md) | TypeScript test infrastructure, directory structure, Vitest configuration |
+| [`effect-unit-testing`](../effect-unit-testing/SKILL.md) | Effect-specific testing patterns for Effect v4 monorepo packages |
 
 ## Coding Principles
 

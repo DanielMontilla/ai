@@ -223,7 +223,7 @@ The `groups` field in frontmatter categorizes skills for discovery. Each skill s
 | `typescript` | TypeScript-specific | typescript-conventions, creating-typescript-modules |
 | `javascript` | JavaScript-specific | simplifying-code, detecting-duplication |
 | `conventions` | Code style and convention enforcement | leaving-it-cleaner, favoring-composition |
-| `testing` | Testing infrastructure and review | unit-testing, setup-typescript-tests-with-effect |
+| `testing` | Testing infrastructure and review | unit-testing, typescript-unit-testing, effect-unit-testing |
 | `git` | Git operations | planning-git-commits, adding-references |
 | `references` | Reference code management | finding-references, adding-references |
-| `effect` | Effect TS ecosystem | setup-typescript-tests-with-effect |
+| `effect` | Effect TS ecosystem | effect-unit-testing |

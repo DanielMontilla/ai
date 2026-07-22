@@ -1,20 +1,18 @@
 ---
 name: unit-testing
-description: Reviews tests for quality and structure. Probes whether tests test real behavior or just mocks. Verifies test directory layout. Use when writing tests, reviewing PRs with test changes, or before adding test coverage.
+description: Language-agnostic test quality fundamentals. Probes whether tests test real behavior or just mocks, evaluates test structure, and identifies missing coverage. Use when writing or reviewing tests in any language.
 author: Daniel Montilla
-version: 1.0.1
+version: 1.0.0
 license: MIT
 groups:
   - testing
 dependencies:
   - executing-skills
-  - creating-typescript-modules
-  - setup-typescript-tests-with-effect
 ---
 
 # When To Use
 
-Reviewing test files for quality, structure, and proper coverage. Auditing PRs that include test changes. Before adding new tests to ensure conventions are followed. When investigating test reliability issues.
+Reviewing test quality and coverage regardless of language or framework. Auditing PRs that include test changes. Before adding new tests to ensure they test real behavior. When investigating test reliability issues.
 
 > **Prerequisite**: Load the [executing-skills](../executing-skills/SKILL.md) skill before running this pipeline. It governs how skills are loaded, executed, and verified.
 
@@ -29,47 +27,19 @@ Ask in order:
 - **Does this need another type of test?** Would integration, end-to-end, snapshot, or property-based testing be more appropriate? Heavy mocking of IO/database/network suggests an integration test instead.
 - **Is the test specific enough?** Does it assert exact values/structures rather than vague truthiness? Can it produce false positives?
 
-## 2. Verify Directory Structure
+## 2. Verify Test Structure
 
-### For TypeScript Modules
+Check that each test follows sound principles:
 
-If the code under test follows the [creating-typescript-modules](../creating-typescript-modules/SKILL.md) convention (`.module.ts` + `index.ts`):
+- **Independent** — no shared mutable state across tests; order-independent
+- **Repeatable** — no dependence on time, randomness, or external services
+- **Self-validating** — fails on a broken invariant, not just an uncaught exception
+- **Clear structure** — follows ARRANGE-ACT-ASSERT or equivalent pattern
 
-```
-src/[category]/[module-name]/
-├── [module-name].module.ts
-├── index.ts
-└── test/
-    ├── [module-name].[utility-1].test.ts
-    └── [module-name].[utility-2].test.ts
-```
+## 3. Identify Coverage Gaps
 
-- `test/` directory lives **inside** the module directory
-- One test file per exported utility/function
-- Naming: `[module-name].[utility-name].test.ts`
-
-### For Non-Module Code
-
-```
-src/[path/]/
-├── file-to-test.ts
-└── test/
-    └── file-to-test.test.ts
-```
-
-- `test/` directory sits **next to** the file being tested
-- Must use `test/` — never `__test__` or `tests/`
-
-## 3. Apply TypeScript Conventions
-
-If working in TypeScript, load [setup-typescript-tests-with-effect](../setup-typescript-tests-with-effect/SKILL.md) for scaffolding guidance and [creating-typescript-modules](../creating-typescript-modules/SKILL.md) for module conventions covering:
-
-- File templates and imports
-- `@effect/vitest` patterns
-- Effect-specific testing (`.it.effect`, `Exit` assertions)
-- Namespace imports and self-contained test contexts
+- Which branches, error paths, and edge cases have no test?
+- Are boundary values (empty, null, max) covered?
+- Are failure modes (timeout, bad input, network error) exercised?
 
 # Reference
-
-- **Module conventions**: [creating-typescript-modules](../creating-typescript-modules/SKILL.md) (MUST READ)
-- **Test scaffolding**: [setup-typescript-tests-with-effect](../setup-typescript-tests-with-effect/SKILL.md)
