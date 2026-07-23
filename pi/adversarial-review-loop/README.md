@@ -1,6 +1,8 @@
 # @montflow/adversarial-review-loop
 
-A Pi extension that runs an automated **adversarial review loop** on your codebase. Two agents collaborate in a cycle — reviewer and fixer — communicating through a shared review report file at `.agents/reviews/<name>/<code>.md` using the **adversarial-review v3 per-finding protocol** (`Status` / `Attempts` / `### Discussion`).
+A Pi extension that runs an automated **adversarial review loop** on your codebase. Two agents collaborate in a cycle — reviewer and fixer — communicating through a shared review report file using the **adversarial-review v3 per-finding protocol** (`Status` / `Attempts` / `### Discussion`).
+
+In **standalone mode** (default), the review file lives at `.agents/reviews/<name>/<code>.md`. In **feature-spec mode** (`--feature-spec --spec-name <name>`), the review file lives inside the review task's directory as `REVIEW.md` (e.g., `.agents/features/<name>/A/A099-review-phase/REVIEW.md`).
 
 > **Skill compatibility**: targets `adversarial-review` v3.0.0 (reviewer) and `addressing-adversarial-review` v1.0.0 (fixer). Both skills MUST be present at `.agents/skills/adversarial-review/SKILL.md` and `.agents/skills/addressing-adversarial-review/SKILL.md`.
 
@@ -59,7 +61,7 @@ Reviewer and fixer never talk directly. They coordinate through the shared revie
 ```mermaid
 flowchart LR
     subgraph disk["On Disk — single file, overwritten in place"]
-        FILE[".agents/reviews/&lt;name&gt;/&lt;code&gt;.md<br/>per-finding: ID, Status, Attempts, ### Discussion"]
+        FILE["Standalone: `.agents/reviews/&lt;name&gt;/&lt;code&gt;.md`<br/>Feature-spec: `<task-dir>/REVIEW.md`<br/>per-finding: ID, Status, Attempts, ### Discussion"]
     end
     REV["REVIEWER<br/>writes findings / re-reviews"] -->|overwrite| FILE
     FILE -->|read + overwrite| FIX["FIXER<br/>applies fixes, updates per-finding fields"]
@@ -111,12 +113,14 @@ Requires `@earendil-works/pi-coding-agent` as a peer dependency. The target proj
 |---|---|---|
 | `--reviewer-model` | `deepseek-v4-pro` | Heavy model for the reviewer agent |
 | `--fixer-model` | `deepseek-v4-flash-free` | Cheap model for the fixer agent |
-| `--depth` / `--max-loops` | `3` | Maximum review cycles before escalation |
+| `--depth` / `--max-loops` | `5` | Maximum review cycles before escalation |
 | `--dir` / `--target-dir` | current dir | Directory to review |
-| `--name` | `adversarial` | `<name>` segment of `.agents/reviews/<name>/<code>.md` |
+| `--name` | `adversarial` | `<name>` segment of `.agents/reviews/<name>/<code>.md` (standalone mode) |
 | `--fresh` | `false` | Allocate a new `<code>` instead of reusing the highest existing (forces a fresh review even when files exist) |
+| `--feature-spec` | `false` | Enable feature-spec mode: reads the active phase from `.agents/features/<spec-name>/`, writes the review to `<task-dir>/REVIEW.md`, creates remediation tasks, and updates `FEATURE.md` |
+| `--spec-name` | _(required with `--feature-spec`)_ | Feature name — locates `.agents/features/<spec-name>/` |
 
-There is no `chat` or `feature-spec` output mode — adversarial-review v3.0.0 requires the review to ALWAYS be written to `.agents/reviews/<name>/<code>.md`, and the fixer↔reviewer loop depends on that shared artifact.
+In standalone mode, adversarial-review v3.0.0 requires the review to be written to `.agents/reviews/<name>/<code>.md`. In feature-spec mode, the review lives inside the review task's directory as `REVIEW.md` — the same location that `executing-feature-spec` expects for its independent-subagent review output.
 
 ## Cycle logic
 
@@ -133,7 +137,7 @@ flowchart TD
     MAX -->|yes| HUMAN
 ```
 
-**Consecutive-failure handling:** if *either* the reviewer or the fixer errors, the extension increments a shared `consecutiveFailures` counter and retries the current cycle. After 2 consecutive failures by either agent, the loop aborts and escalates to the human (`MAX_CONSECUTIVE_FAILURES = 2`). A successful run by either agent resets the counter to 0.
+**Consecutive-failure handling:** each agent tracks its own `reviewerConsecutiveFailures` / `fixerConsecutiveFailures` counter independently. After 2 consecutive failures by a given agent, *that* agent's branch aborts the loop and escalates to the human (`MAX_CONSECUTIVE_FAILURES = 2`). A successful run by an agent resets only its own counter.
 
 **Escalation:**
 - If the fixer hits `Attempts >= Max Attempts` on a finding, that finding is set to `Escalated` in the file and surfaces in the next reviewer cycle (the loop stops when only `Escalated` findings remain — they need human input). `Max Attempts` comes from the file's Review Metadata (default 3 per the skill).
@@ -144,8 +148,11 @@ flowchart TD
 
 | File | Responsibility |
 |---|---|
-| `index.js` | Extension entry. Parses flags, gates on skill presence, resolves the review file, runs the cycle loop, parses `## Summary` for termination, and handles escalation. |
+| `index.js` | Extension entry. Parses flags, gates on skill presence, resolves the review file (standalone: `.agents/reviews/`, feature-spec: `<task-dir>/REVIEW.md`), runs the cycle loop, parses `## Summary` for termination, and handles escalation. |
 | `runner.js` | Agent plumbing over `@earendil-works/pi-coding-agent`. `runAgent` (single-use, fixer), `createPersistentAgent` (reviewer), `createSession` (spawns with `noSkills: true` so agents load skills as data). |
 | `agents.js` | System prompts (`REVIEWER_SYSTEM`, `FIXER_SYSTEM`) and per-role tool grants (`TOOLS`). |
 | `parse-summary.js` | Pure `## Summary` parser (`parseSummaryText`) + `isAllTerminal`. Isolated for unit testing (regression for finding F15). |
-| `test/` | Unit tests for `parse-summary.js`. |
+| `resolve-review-file.js` | Extracted review file path resolution for standalone mode. Unit-tested independently. |
+| `verify-skill.js` | Extracted skill version checking (`extractVersion`, `majorGte`, `verifySkill`). Unit-tested independently. |
+| `feature-spec.js` | Feature-spec mode: loads specs, finds active phases, creates remediation tasks, updates `FEATURE.md` task tables, tracks review loop counters. |
+| `test/` | Unit tests for all modules. |
