@@ -57,8 +57,8 @@ flowchart TD
     D -->|No| C
     D -->|Yes| CX{Review task<br>in Phase X?}
     CX -->|No| E[Halt execution]
-    CX -->|Yes| RX[Spawn INDEPENDENT subagent<br>run adversarial-review<br>write REVIEW.md]
-    RX --> RY[Prompt user:<br>review REVIEW.md?<br>accept/dismiss findings]
+    CX -->|Yes| RX[Spawn INDEPENDENT subagent<br>run adversarial-review<br>write .agents/reviews/&lt;feature-name&gt;/&lt;code&gt;.md]
+    RX --> RY[Prompt user:<br>review .agents/reviews/&lt;feature-name&gt;/&lt;code&gt;.md?<br>accept/dismiss findings]
     RY --> RZ{Accepted findings?}
     RZ -->|Yes| I[Author remediation tasks<br>defect/execution per finding]
     I --> J[Show remediation tasks<br>for approval]
@@ -98,13 +98,14 @@ flowchart TD
     - If any status value is not in the canonical enum, coerce it to `blocked`, log a deviation in the task's MEMORY.md, and warn the user
 - Map tasks as: `complete`, `in-progress`, `pending`, `blocked` — the canonical status enum defined in [authoring-feature-spec](../authoring-feature-spec/SKILL.md). Do not invent other status values (e.g. `defect`).
   - Determine active phase: the first phase with any pending/in-progress tasks. Phases listed in FEATURE.md `locked-phases` are skipped (already committed and locked).
-  - If a task has `type: defect` child tasks that are still `pending` or `in-progress`, set the parent task's `status: blocked` (per the canonical enum in authoring-feature-spec) and do not treat it as actionable until those children close. To find a task's open defect children, scan all TASK.md whose `originator` is `defect:<this-id>`. The `related-tasks` field is an optional cross-reference only and is not used for blocking.
+  - If a task has `type: defect` child tasks that are still `pending` or `in-progress`, set the parent task's `status: blocked` (per the canonical enum in authoring-feature-spec) and do not treat it as actionable until those children close. To find a task's open defect children, scan all TASK.md files within the active phase's task directories whose `originator` is `defect:<this-id>`. The `related-tasks` field is an optional cross-reference only and is not used for blocking.
+  - On re-entry, read the review loop counter from the review task's `MEMORY.md` (under `## Review Loop Counter`) to resume the review loop at the correct iteration. If the counter is absent, start at iteration 1.
 
 ## 2. Execute Phase
 
 Spawn sub-agents for pending tasks in the active phase, in dependency order:
 
-- **`interruptor` = hard stop.** When any `interruptor` in the active phase becomes runnable, halt spawning of all further tasks and present its context for a required user decision before spawning anything else; re-check after each task completes. An `interruptor` must never run in parallel with other work (interruptor now halts as hard stop).
+- **`interruptor` = hard stop.** After each task completes, re-check all `interruptor` tasks in the active phase. If an interruptor's `depends-on` tasks are all `complete`, halt spawning immediately — do not spawn any further tasks and present the interruptor's context for a required user decision. An `interruptor` must never run in parallel with other work.
 - **`review` tasks are excluded** from the parallel spawn — they run after the non-review tasks complete (see Step 4) via an independent subagent.
 - **`planning` tasks must wait** for any in-phase `exploratory`/`execution`/`defect` tasks listed in their `depends-on` to reach `complete` before being spawned; do not run them in parallel with unfinished dependencies (planning tasks wait for dependencies).
 - All other pending tasks whose `depends-on` is satisfied may run in parallel.
@@ -122,9 +123,9 @@ Each task's `type` (in TASK.md frontmatter) determines behavior:
 | **execution** | Write/modify code. May optionally have GATES.md for validation (test, lint, format). |
 | **interruptor** | Hard stop. Present context, ask user question. Complete only after user answers. |
 | **defect** | Fix bugs from phase reviews. Same as execution, focused on `related-tasks`. |
-| **review** | Run by an **INDEPENDENT subagent** (never the agents that authored/executed the phase). Execute the `adversarial-review` skill over the completed phase and write findings to `REVIEW.md`. Block completion on human review of `REVIEW.md`; accepted findings become `defect`/`execution` remediation tasks. |
+| **review** | Run by an **INDEPENDENT subagent** (never the agents that authored/executed the phase). Execute the `adversarial-review` skill over the completed phase and write findings to `.agents/reviews/<feature-name>/<code>.md`. Block completion on human review of the review file; accepted findings become `defect`/`execution` remediation tasks. |
 
-Before executing a task, check the `FEATURE.md` task table's `Gates` column. If `Yes`, the sub-agent must execute and pass `<task-dir>/GATES.md` before marking the task complete. If the column says `Yes` but no `<task-dir>/GATES.md` exists, treat the task as failed and report the mismatch. Conversely, if a `GATES.md` exists but the column says `No`, warn and still execute its gates.
+Before executing a task, check the `FEATURE.md` task table's `Gates` column. If `Yes`, the sub-agent must execute and pass `<task-dir>/GATES.md` before marking the task complete. If the column says `Yes` but no `<task-dir>/GATES.md` exists, treat the task as failed and report the mismatch. Conversely, if the `Gates` column says `No` but a `<task-dir>/GATES.md` exists on disk, warn and execute its gates anyway.
 
 ## 4. End-of-Phase Review & Defect Loop
 
@@ -132,15 +133,16 @@ When all **non-review** tasks in the current Phase complete:
 
 1. **Halt execution.**
 2. **If the phase contains a `review` task** → run the independent-subagent review flow, subject to a **review-loop cap of 5 iterations** (see Review Loop Counter below):
-       - Spawn an **independent subagent** (distinct from any agent that authored or executed tasks in this phase) to execute the `adversarial-review` skill over the completed phase. The subagent writes its findings to `REVIEW.md` in the `review` task directory.
-       - **Prompt user:** "Phase <X> review ready. Review `REVIEW.md`?" Present the findings.
-       - For each **accepted** finding, author a remediation task (`type: defect` or `execution`) referencing the finding. Determine the new task ID by scanning existing tasks in the active phase and incrementing the highest number, using zero-padded three-digit numbering (A001–A999).
-       - For each **dismissed** finding, record the reason in `REVIEW.md` under Human Review.
+        - **Construct the review scope:** collect all file paths modified by completed tasks in the phase (from their MEMORY.md handoff notes or git diff). Pass this scope to the review subagent as the review target.
+        - Spawn an **independent subagent** (distinct from any agent that authored or executed tasks in this phase) to execute the `adversarial-review` skill over the completed phase. The subagent writes its findings to `.agents/reviews/<feature-name>/<code>.md`.
+        - **Prompt user:** "Phase <X> review ready. Review `.agents/reviews/<feature-name>/<code>.md`?" Present the findings.
+- For each **accepted** finding, author a remediation task (`type: defect` or `execution`) with `finding-ref: <F<n>>` in its frontmatter linking to the specific finding ID. Determine the new task ID by scanning existing tasks in the active phase and incrementing the highest number, using zero-padded three-digit numbering (A001–A999).
+        - For each **dismissed** finding, record the reason in the finding's `### Discussion` thread as a `[Human]` turn.
        - Create the remediation task directories (`<PHASE_LETTER><NNN>-<name>/`) within the active phase namespace. Do not nest tasks inside other task directories.
        - Update the Task Table in `FEATURE.md` to include the remediation tasks.
        - Present the remediation task list to the user for approval or modification; iterate until approved.
-       - **Execute remediation tasks** with sub-agents (same as step 2). After execution, reset the phase's review task `status` to `pending` and re-run the independent-subagent review (loop back to the adversarial-review step) until no accepted findings remain.
-       - **Review Loop Counter:** increment a per-phase counter in MEMORY.md each time the adversarial-review→remediation cycle re-runs. The maximum cap is **5 iterations**. If the counter reaches 5 while accepted findings remain, **halt execution** and report the unresolved findings to the user rather than continuing the loop.
+       - **Execute remediation tasks** with sub-agents (same as step 2). After execution, re-run the independent-subagent review (loop back to the adversarial-review step) until no accepted findings remain.
+       - **Review Loop Counter:** increment a per-phase counter in the review task's `MEMORY.md`, under a `## Review Loop Counter` section, each time the adversarial-review→remediation cycle re-runs. The maximum cap is **5 iterations**. If the counter reaches 5 while accepted findings remain, **halt execution** and report the unresolved findings to the user rather than continuing the loop.
        - Keep the `review` task `status` as `pending` throughout the review/defect loop. Only mark it `complete` after the human reports "no issues" at the Phase X complete prompt (step 3).
 3. **Prompt user:** "Phase <X> complete. Review work?" (manual catch-all beyond the `review` task).
 4. **If user reports issues** → agent groups reported issues into defect tasks:
