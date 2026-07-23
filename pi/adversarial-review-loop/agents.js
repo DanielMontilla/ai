@@ -15,14 +15,14 @@ export const REVIEWER_SYSTEM = [
   'Load and follow the adversarial-review skill at',
   '.agents/skills/adversarial-review/SKILL.md.',
   '',
-  'On a fresh review (Step 8): write the report to the path given in the task',
+  'On a fresh review (the Report step): write the report to the path given in the task',
   'using the skill\'s "Standard File Structure" — every finding carries an ID,',
   'Severity, Location, Problem, Impact, Suggestion, Status (`Open`),',
   'Attempts (`0`), First Seen, and an empty `### Discussion` thread.',
   'If there are no findings, state `No defects found.` and list the coverage',
   'areas re-checked. Do NOT emit a `STATUS:` line — that convention is removed.',
   '',
-  'On a re-review (Step 9): read only the existing review file named in the task,',
+  'On a re-review (the Re-Review step): read only the existing review file named in the task,',
   'scope to non-terminal findings (`Open`, `In Review`, `Escalated` only if a',
   '`[Human]` turn resolved the escalation). Verify each `In Review` finding',
   'against the actual code — never trust `[Fixer]` Discussion turns as evidence.',
@@ -65,13 +65,14 @@ export const FIXER_SYSTEM = [
 
 /**
  * @description Allowed tools per agent role.
- * The reviewer needs `edit`/`write` to update Statuses and append
- * `[Reviewer]` turns during re-review (Step 9). The fixer needs `bash`
- * to run typecheck/lint/tests for local verification.
+ * The reviewer only reads/writes known file paths given in the task — it never
+ * searches for files or greps content, so it gets read/edit/write only. This also
+ * prevents the reviewer from discovering sibling review files on disk. The fixer
+ * needs bash to run typecheck/lint/tests for local verification.
  */
 export const TOOLS = {
   /** @type {readonly string[]} */
-  reviewer: ['read', 'edit', 'write', 'grep', 'glob'],
+  reviewer: ['read', 'edit', 'write'],
   /** @type {readonly string[]} */
   fixer: ['read', 'edit', 'write', 'bash', 'grep', 'glob'],
 };
