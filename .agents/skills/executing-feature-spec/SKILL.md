@@ -2,7 +2,7 @@
 name: executing-feature-spec
 description: Executes feature spec tasks — orchestrates by type (exploratory, execution, planning, interruptor, defect, review) with human-in-the-loop phase interruptions, independent-subagent adversarial reviews, and flat defect resolution. Reads feature state to determine active phase and resumes or begins execution accordingly.
 author: Daniel Montilla
-version: 1.3.2
+version: 1.4.0
 license: MIT
 groups:
   - skills
@@ -11,6 +11,7 @@ dependencies:
   - executing-skills
   - planning-git-commits
   - caveman-compression
+  - caveman-reasoning
   - finding-references
   - adversarial-review
 ---
@@ -20,6 +21,30 @@ dependencies:
 Use when a feature spec exists in `.agents/features/<name>/` and its tasks need implementation. The agent reads the feature state, determines the active phase, and resumes or begins execution — always operating per-phase, spawning sub-agents for all pending tasks in parallel.
 
 > **Prerequisite**: Load the [executing-skills](../executing-skills/SKILL.md) skill before running this pipeline. It governs how skills are loaded, executed, and verified.
+
+# Orchestrator Role
+
+The agent running this skill acts as an **orchestrator**. Its strict responsibilities:
+
+- Schedule tasks and determine execution order (including which tasks can run in parallel).
+- Spawn sub-agents for every pending task; generate new tasks from reviewer feedback.
+- Supervise loop limits (see the review-loop cap in Step 4).
+- Operate **per-phase only** — never execute more than one phase at a time.
+
+The orchestrator and every spawned sub-agent MUST load and apply [caveman-reasoning](../caveman-reasoning/SKILL.md) to their internal reasoning trace. Inter-agent communication (task handoff notes, MEMORY.md free-form prose, review-feedback summaries) uses [caveman-compression](../caveman-compression/SKILL.md) — never compress frontmatter, MEMORY.md `Handoff`/`Deviations`, or TASK.md `Requirements`.
+
+# Subagent Spawning
+
+Spawn sub-agents appropriate to effort. Use generic capacity tiers (match to whatever models your environment exposes — do not hardcode model names):
+
+| Effort | Examples | Capacity tier |
+|---|---|---|
+| **Low** | formatting, linting, simple typos | Lower-capacity model |
+| **High** | writing new logic, fixing adversarial-review findings, refactoring | Higher-capacity model |
+
+## Verification Commands
+
+Do not assume a specific toolchain. Instruct every spawned sub-agent to **consult the project manifest** (e.g., `package.json`, `Cargo.toml`, `pyproject.toml`) to discover the available verification commands (typically: test, lint, format, build, typecheck). If a sub-agent is unsure which commands exist, it must read the manifest before relying on any command. Never invent commands.
 
 # Pipeline
 
@@ -41,7 +66,9 @@ flowchart TD
     K -->|Modify| L[Update per changes]
     L --> J
     K -->|Approved| M[Execute remediation tasks]
-    M --> RX
+    M --> CAP{Review loop<br>under cap of 5?}
+    CAP -->|Yes| RX
+    CAP -->|No| HALT2[Halt execution<br>review cap reached]
     RZ -->|No| E
     E --> F[Prompt user:<br>Phase X complete. Review work?]
     F --> G{User feedback?}
@@ -104,7 +131,7 @@ Before executing a task, check the `FEATURE.md` task table's `Gates` column. If 
 When all **non-review** tasks in the current Phase complete:
 
 1. **Halt execution.**
-2. **If the phase contains a `review` task** → run the independent-subagent review flow:
+2. **If the phase contains a `review` task** → run the independent-subagent review flow, subject to a **review-loop cap of 5 iterations** (see Review Loop Counter below):
        - Spawn an **independent subagent** (distinct from any agent that authored or executed tasks in this phase) to execute the `adversarial-review` skill over the completed phase. The subagent writes its findings to `REVIEW.md` in the `review` task directory.
        - **Prompt user:** "Phase <X> review ready. Review `REVIEW.md`?" Present the findings.
        - For each **accepted** finding, author a remediation task (`type: defect` or `execution`) referencing the finding. Determine the new task ID by scanning existing tasks in the active phase and incrementing the highest number, using zero-padded three-digit numbering (A001–A999).
@@ -113,6 +140,7 @@ When all **non-review** tasks in the current Phase complete:
        - Update the Task Table in `FEATURE.md` to include the remediation tasks.
        - Present the remediation task list to the user for approval or modification; iterate until approved.
        - **Execute remediation tasks** with sub-agents (same as step 2). After execution, reset the phase's review task `status` to `pending` and re-run the independent-subagent review (loop back to the adversarial-review step) until no accepted findings remain.
+       - **Review Loop Counter:** increment a per-phase counter in MEMORY.md each time the adversarial-review→remediation cycle re-runs. The maximum cap is **5 iterations**. If the counter reaches 5 while accepted findings remain, **halt execution** and report the unresolved findings to the user rather than continuing the loop.
        - Keep the `review` task `status` as `pending` throughout the review/defect loop. Only mark it `complete` after the human reports "no issues" at the Phase X complete prompt (step 3).
 3. **Prompt user:** "Phase <X> complete. Review work?" (manual catch-all beyond the `review` task).
 4. **If user reports issues** → agent groups reported issues into defect tasks:

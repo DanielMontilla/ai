@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0] - 2026-07-22
+
+### Added
+
+- New "Orchestrator Role" section: scheduling, spawning subagents, generating tasks from reviewer feedback, supervising loop limits, per-phase operation
+- New "Subagent Spawning" section: generic low/high capacity tiers for sub-agent model selection (no hardcoded model names)
+- New "Verification Commands" directive: subagents consult the project manifest (e.g. `package.json`) to discover verification commands instead of assuming a fixed toolchain
+- Added `caveman-reasoning` to dependencies; orchestrator and all subagents apply it to their reasoning trace
+- Review-loop cap of 5 iterations: per-phase counter in MEMORY.md; halts execution and reports unresolved findings when reached
+- Mermaid diagram: added review-loop cap decision node (`CAP` → `HALT2`)
+
+### Changed
+
+- Review loop in Step 4 now references the cap explicitly in the flow header
+
 ## [1.3.2] - 2026-07-14
 
 ### Fixed

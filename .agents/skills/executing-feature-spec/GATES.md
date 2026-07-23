@@ -23,6 +23,10 @@
 - [ ] Remediation tasks trigger fresh adversarial review (review task reset to `pending`, re-run)
 - [ ] Review task stays `pending` until human signs off at Phase X complete prompt
 - [ ] Review loop repeats until user reports no issues
+- [ ] Review-loop counter tracked in MEMORY.md; execution halts at 5 iterations if accepted findings remain
+- [ ] Subagents selected by effort tier (low/high capacity) — no hardcoded model names
+- [ ] Subagents discover verification commands from the project manifest, not assumed toolchains
+- [ ] Orchestrator and subagents apply caveman-reasoning to their reasoning trace
 
 ## Phase 4: Per-Phase Commit
 
