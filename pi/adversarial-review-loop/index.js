@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { REVIEWER_SYSTEM, FIXER_SYSTEM, TOOLS } from './agents.js';
 import { runAgent, createPersistentAgent } from './runner.js';
 import { parseSummary, isAllTerminal } from './parse-summary.js';
@@ -22,6 +23,55 @@ import {
 /**
  * @typedef {{ ok: true, opts: LoopOptions } | { ok: false, err: unknown }} ParsedOptions
  */
+
+/**
+ * Gets the current git branch name.
+ * @param {string} cwd - Working directory
+ * @returns {string | null} Branch name or null if not a git repo
+ */
+function getCurrentGitBranch(cwd) {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    return branch === 'HEAD' ? null : branch; // detached HEAD
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validates feature-spec mode by detecting git branch and matching feature directory.
+ * Expects branch format: feat/<feature-name>
+ * @param {string} cwd - Working directory
+ * @returns {{ ok: true, specName: string } | { ok: false, err: string }}
+ */
+function validateFeatureSpecFromBranch(cwd) {
+  const branch = getCurrentGitBranch(cwd);
+  if (!branch) {
+    return { ok: false, err: 'Not a git repository or detached HEAD. Use --spec-name explicitly.' };
+  }
+
+  const match = branch.match(/^feat\/(.+)$/);
+  if (!match) {
+    return { ok: false, err: `Branch '${branch}' does not match expected format 'feat/<feature-name>'. Use --spec-name explicitly or checkout a feature branch.` };
+  }
+
+  const specName = match[1];
+  const featureDir = path.join(cwd, '.agents/features', specName);
+  if (!fs.existsSync(featureDir)) {
+    return { ok: false, err: `Feature directory not found: ${featureDir}. Create the feature spec or use --spec-name explicitly.` };
+  }
+
+  const featureMd = path.join(featureDir, 'FEATURE.md');
+  if (!fs.existsSync(featureMd)) {
+    return { ok: false, err: `FEATURE.md not found in ${featureDir}. Initialize the feature spec first.` };
+  }
+
+  return { ok: true, specName };
+}
 
 /** @type {string} */
 const DEFAULT_REVIEWER = 'deepseek-v4-pro';
@@ -66,8 +116,10 @@ function parseOptions(args, cwd) {
   const featureSpec = map['feature-spec'] === 'true' || map['feature-spec'] === '1';
   const specName = map['spec-name'];
 
+  // If feature-spec is enabled but spec-name not provided, we'll try to detect from git branch
+  // Validation happens in the handler after skill check
   if (featureSpec && !specName) {
-    throw new Error('--feature-spec requires --spec-name');
+    // Don't throw here - we'll validate in handler with branch detection
   }
 
   return {
@@ -152,7 +204,22 @@ export default function adversarialReviewLoopExtension(pi) {
       /** @type {{ spec: import('./feature-spec.js').FeatureSpec, phase: { phase: string, phaseDir: string, reviewTask: { id: string, memoryPath: string, reviewFile: string } | null, highestTaskId: string } } | null} */
       let featureSpecCtx = null;
       if (opts.featureSpec) {
-        const loadResult = loadFeatureSpec(ctx.cwd, opts.specName);
+        // If specName not provided, try to detect from git branch
+        let specName = opts.specName;
+        if (!specName) {
+          const branchValidation = validateFeatureSpecFromBranch(ctx.cwd);
+          if (!branchValidation.ok) {
+            ctx.ui.notify(branchValidation.err, 'error');
+            return;
+          }
+          specName = branchValidation.specName;
+          ctx.ui.notify(
+            `[adversarial-review-loop] Detected feature from branch: feat/${specName}`,
+            'info',
+          );
+        }
+
+        const loadResult = loadFeatureSpec(ctx.cwd, specName);
         if (!loadResult.ok) {
           ctx.ui.notify(loadResult.err, 'error');
           return;
@@ -160,7 +227,7 @@ export default function adversarialReviewLoopExtension(pi) {
         const activePhase = findActivePhase(loadResult.spec, loadResult.spec.lockedPhases);
         if (!activePhase) {
           ctx.ui.notify(
-            `[adversarial-review-loop] No active phase found for feature '${opts.specName}'. All phases may be complete or locked.`,
+            `[adversarial-review-loop] No active phase found for feature '${specName}'. All phases may be complete or locked.`,
             'warning',
           );
           return;
@@ -174,7 +241,7 @@ export default function adversarialReviewLoopExtension(pi) {
         }
         featureSpecCtx = { spec: loadResult.spec, phase: activePhase };
         ctx.ui.notify(
-          `[adversarial-review-loop] Feature-spec mode: '${opts.specName}', active phase=${activePhase.phase}, review task=${activePhase.reviewTask.id}`,
+          `[adversarial-review-loop] Feature-spec mode: '${specName}', active phase=${activePhase.phase}, review task=${activePhase.reviewTask.id}`,
           'info',
         );
       }
